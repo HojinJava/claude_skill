@@ -150,6 +150,11 @@ python $S/ledger.py add   ledger.jsonl --file out/R2.Q7.rec.json
 python $S/ledger.py check ledger.jsonl                    # 분모 누락 · 현행 충돌 · 끊긴 사슬
 python $S/ledger.py show  ledger.jsonl --q Q7 --all       # 그 항목의 바퀴 전체
 
+# 8 · 문서. 판정표 · 미해결 · 종료 판정은 손으로 쓰지 않는다. 원장에서 뽑아 표시 사이에 끼운다
+#     문서에 <!-- GEN:verdicts --> … <!-- /GEN:verdicts --> 를 두면 그 사이를 갈아 끼운다
+python $S/render.py ledger.jsonl report.html
+python $S/render.py ledger.jsonl report.html --check    # 어긋났는지만 본다. 어긋나면 종료코드 1
+
 # load.py 를 고쳤으면 두 적재 경로가 같은 값을 내는지 확인한다
 python $S/selftest.py <작은-폴더> --glob "**/*.md"
 ```
