@@ -136,12 +136,18 @@ def loopend(cur: list) -> str:
            f"그중 <b>{len(now)}건은 바깥 입력 없이 지금 돌 수 있다</b>. "
            f"보류 판정은 {len(hold)}건이다.</div>"]
     if wait:
-        out += ["<h3>다음 회차로 넘기는 것</h3>",
-                '<div class="tblwrap"><table>',
-                "<tr><th>항목</th><th>무엇이 있어야 풀리나</th><th>원장</th></tr>"]
+        # 목록은 미해결 절이 이미 들고 있다. 같은 넷을 두 번 보여주지 않는다.
+        out.append(f"<p><b>바깥 입력을 기다리는 {len(wait)}건의 목록은 앞 절 미해결에 있다.</b> "
+                   "여기서는 그 넷이 <b>왜 이 바퀴에서 안 돌았는지</b>만 가른다. "
+                   "미해결이 “무엇이 남았나”라면 이 절은 “더 돌 값어치가 있나”다.</p>")
+        kinds = {}
         for r in wait:
-            out.append(f'<tr><td>{esc(r["q"])}</td><td>{esc(r.get("next_research", ""))}</td>'
-                       f'<td class="n">{esc(r["id"])}</td></tr>')
+            k = (r.get("next_research") or "").split(".")[0][:40] or "·"
+            kinds.setdefault(k, []).append(r["id"])
+        out += ['<div class="tblwrap"><table>',
+                "<tr><th>무엇을 기다리나</th><th>원장</th></tr>"]
+        for k, ids in kinds.items():
+            out.append(f'<tr><td>{esc(k)}</td><td class="n">{esc(" · ".join(ids))}</td></tr>')
         out += ["</table></div>"]
     out.append('<p class="src">원장 <code>ledger.jsonl</code> 에서 생성</p>')
     return "\n".join(out)
