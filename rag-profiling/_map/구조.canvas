@@ -1,0 +1,310 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "file",
+      "file": "SKILL.md",
+      "x": 0,
+      "y": 0,
+      "width": 300,
+      "height": 180,
+      "color": "5"
+    },
+    {
+      "id": "n2",
+      "type": "file",
+      "file": "references/llm-judgment.md",
+      "x": 460,
+      "y": 0,
+      "width": 300,
+      "height": 180
+    },
+    {
+      "id": "n3",
+      "type": "file",
+      "file": "references/techniques.md",
+      "x": 460,
+      "y": 230,
+      "width": 300,
+      "height": 180
+    },
+    {
+      "id": "n4",
+      "type": "file",
+      "file": "references/hypothesis-validation.md",
+      "x": 920,
+      "y": 0,
+      "width": 300,
+      "height": 180
+    },
+    {
+      "id": "n5",
+      "type": "file",
+      "file": "references/artifact.md",
+      "x": 1380,
+      "y": 0,
+      "width": 300,
+      "height": 180
+    },
+    {
+      "id": "n6",
+      "type": "file",
+      "file": "references/catalog.md",
+      "x": 1380,
+      "y": 230,
+      "width": 300,
+      "height": 180
+    },
+    {
+      "id": "n7",
+      "type": "file",
+      "file": "references/narrative.md",
+      "x": 1380,
+      "y": 460,
+      "width": 300,
+      "height": 180
+    },
+    {
+      "id": "n8",
+      "type": "file",
+      "file": "references/verifying.md",
+      "x": 1380,
+      "y": 690,
+      "width": 300,
+      "height": 180
+    },
+    {
+      "id": "n9",
+      "type": "file",
+      "file": "references/orchestration.md",
+      "x": 1840,
+      "y": 0,
+      "width": 300,
+      "height": 180
+    },
+    {
+      "id": "n10",
+      "type": "file",
+      "file": "references/reporting.md",
+      "x": 1840,
+      "y": 230,
+      "width": 300,
+      "height": 180
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "fromNode": "n1",
+      "fromSide": "right",
+      "toNode": "n5",
+      "toSide": "left",
+      "label": "2"
+    },
+    {
+      "id": "e2",
+      "fromNode": "n1",
+      "fromSide": "right",
+      "toNode": "n6",
+      "toSide": "left",
+      "label": "3"
+    },
+    {
+      "id": "e3",
+      "fromNode": "n1",
+      "fromSide": "right",
+      "toNode": "n4",
+      "toSide": "left",
+      "label": "2"
+    },
+    {
+      "id": "e4",
+      "fromNode": "n1",
+      "fromSide": "right",
+      "toNode": "n2",
+      "toSide": "left",
+      "label": "2"
+    },
+    {
+      "id": "e5",
+      "fromNode": "n1",
+      "fromSide": "right",
+      "toNode": "n7",
+      "toSide": "left",
+      "label": "3"
+    },
+    {
+      "id": "e6",
+      "fromNode": "n1",
+      "fromSide": "right",
+      "toNode": "n9",
+      "toSide": "left",
+      "label": "3"
+    },
+    {
+      "id": "e7",
+      "fromNode": "n1",
+      "fromSide": "right",
+      "toNode": "n10",
+      "toSide": "left",
+      "label": "2"
+    },
+    {
+      "id": "e8",
+      "fromNode": "n1",
+      "fromSide": "right",
+      "toNode": "n3",
+      "toSide": "left",
+      "label": "2"
+    },
+    {
+      "id": "e9",
+      "fromNode": "n1",
+      "fromSide": "right",
+      "toNode": "n8",
+      "toSide": "left",
+      "label": "4"
+    },
+    {
+      "id": "e10",
+      "fromNode": "n5",
+      "fromSide": "right",
+      "toNode": "n7",
+      "toSide": "left"
+    },
+    {
+      "id": "e11",
+      "fromNode": "n5",
+      "fromSide": "right",
+      "toNode": "n10",
+      "toSide": "left",
+      "label": "2"
+    },
+    {
+      "id": "e12",
+      "fromNode": "n6",
+      "fromSide": "right",
+      "toNode": "n4",
+      "toSide": "left"
+    },
+    {
+      "id": "e13",
+      "fromNode": "n6",
+      "fromSide": "right",
+      "toNode": "n2",
+      "toSide": "left"
+    },
+    {
+      "id": "e14",
+      "fromNode": "n6",
+      "fromSide": "right",
+      "toNode": "n9",
+      "toSide": "left"
+    },
+    {
+      "id": "e15",
+      "fromNode": "n6",
+      "fromSide": "right",
+      "toNode": "n3",
+      "toSide": "left"
+    },
+    {
+      "id": "e16",
+      "fromNode": "n2",
+      "fromSide": "right",
+      "toNode": "n9",
+      "toSide": "left"
+    },
+    {
+      "id": "e17",
+      "fromNode": "n7",
+      "fromSide": "right",
+      "toNode": "n9",
+      "toSide": "left"
+    },
+    {
+      "id": "e18",
+      "fromNode": "n7",
+      "fromSide": "right",
+      "toNode": "n10",
+      "toSide": "left",
+      "label": "2"
+    },
+    {
+      "id": "e19",
+      "fromNode": "n7",
+      "fromSide": "right",
+      "toNode": "n8",
+      "toSide": "left",
+      "label": "2"
+    },
+    {
+      "id": "e20",
+      "fromNode": "n9",
+      "fromSide": "right",
+      "toNode": "n6",
+      "toSide": "left"
+    },
+    {
+      "id": "e21",
+      "fromNode": "n10",
+      "fromSide": "right",
+      "toNode": "n5",
+      "toSide": "left",
+      "label": "3"
+    },
+    {
+      "id": "e22",
+      "fromNode": "n10",
+      "fromSide": "right",
+      "toNode": "n6",
+      "toSide": "left"
+    },
+    {
+      "id": "e23",
+      "fromNode": "n10",
+      "fromSide": "right",
+      "toNode": "n7",
+      "toSide": "left"
+    },
+    {
+      "id": "e24",
+      "fromNode": "n10",
+      "fromSide": "right",
+      "toNode": "n8",
+      "toSide": "left",
+      "label": "3"
+    },
+    {
+      "id": "e25",
+      "fromNode": "n3",
+      "fromSide": "right",
+      "toNode": "n6",
+      "toSide": "left",
+      "label": "3"
+    },
+    {
+      "id": "e26",
+      "fromNode": "n3",
+      "fromSide": "right",
+      "toNode": "n4",
+      "toSide": "left"
+    },
+    {
+      "id": "e27",
+      "fromNode": "n8",
+      "fromSide": "right",
+      "toNode": "n9",
+      "toSide": "left",
+      "label": "3"
+    },
+    {
+      "id": "e28",
+      "fromNode": "n8",
+      "fromSide": "right",
+      "toNode": "n10",
+      "toSide": "left",
+      "label": "5"
+    }
+  ]
+}
