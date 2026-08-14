@@ -29,6 +29,11 @@ COL_GAP, ROW_GAP = 460, 230
 INDEX = "SKILL.md"
 NOTE = "문서참조그래프.md"
 CANVAS = "구조.canvas"
+FLOW = "진행.canvas"
+
+PIPE_RE = re.compile(
+    r"^\|\s*(준비 · 1회|조건부|루프)\s*\|\s*(\S+)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|\s*$"
+)
 
 
 def collect(root: Path) -> list[str]:
@@ -100,7 +105,23 @@ def sides(xa: int, xb: int) -> tuple[str, str]:
     return "bottom", "top"
 
 
-def build_canvas(docs: list[str], merged: dict, depth: dict) -> str:
+def existing_positions(path: Path) -> dict[str, dict]:
+    """이미 있는 캔버스에서 카드 위치를 읽는다. 옵시디언에서 손으로
+    옮긴 배치를 재생성이 덮어쓰지 않게 하기 위해서다."""
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    out = {}
+    for n in data.get("nodes", []):
+        if n.get("type") == "file" and "file" in n:
+            out[n["file"]] = {k: n[k] for k in ("x", "y", "width", "height") if k in n}
+    return out
+
+
+def build_canvas(docs: list[str], merged: dict, depth: dict, keep: dict[str, dict]) -> str:
     body_docs = [d for d in docs if d != INDEX]
     cols: dict[int, list[str]] = {}
     for doc in body_docs:
@@ -108,35 +129,24 @@ def build_canvas(docs: list[str], merged: dict, depth: dict) -> str:
 
     nodes, node_id, pos = [], {}, {}
 
+    def place(doc: str, x: int, y: int, color: str | None = None) -> None:
+        nid = f"n{len(nodes) + 1}"
+        node_id[doc] = nid
+        node = {"id": nid, "type": "file", "file": doc,
+                "x": x, "y": y, "width": CARD_W, "height": CARD_H}
+        node.update(keep.get(doc, {}))
+        pos[doc] = node["x"]
+        if color:
+            node["color"] = color
+        nodes.append(node)
+
     tallest = max((len(v) for v in cols.values()), default=1)
     if INDEX in docs:
-        node_id[INDEX] = "n1"
-        pos[INDEX] = -COL_GAP
-        nodes.append({
-            "id": "n1",
-            "type": "file",
-            "file": INDEX,
-            "x": -COL_GAP,
-            "y": (tallest - 1) * ROW_GAP // 2,
-            "width": CARD_W,
-            "height": CARD_H,
-            "color": "5",
-        })
+        place(INDEX, -COL_GAP, (tallest - 1) * ROW_GAP // 2, color="5")
 
     for col in sorted(cols):
         for row, doc in enumerate(cols[col]):
-            nid = f"n{len(nodes) + 1}"
-            node_id[doc] = nid
-            pos[doc] = col * COL_GAP
-            nodes.append({
-                "id": nid,
-                "type": "file",
-                "file": doc,
-                "x": col * COL_GAP,
-                "y": row * ROW_GAP,
-                "width": CARD_W,
-                "height": CARD_H,
-            })
+            place(doc, col * COL_GAP, row * ROW_GAP)
 
     out_edges = []
     for i, ((src, dst), (fwd, back)) in enumerate(merged.items(), 1):
@@ -222,6 +232,110 @@ def build_note(docs: list[str], index: dict, body: dict, merged: dict) -> str:
     return "\n".join(lines)
 
 
+def parse_pipeline(root: Path) -> list[dict]:
+    """SKILL.md 파이프라인 표를 파싱한다. 표가 정본이고 진행 캔버스는 그 렌더다."""
+    out = []
+    for line in (root / INDEX).read_text(encoding="utf-8").splitlines():
+        m = PIPE_RE.match(line)
+        if m:
+            out.append(dict(zip(("group", "stage", "job", "ref", "team"), m.groups())))
+    return out
+
+
+def _card_text(st: dict) -> str:
+    """카드 본문. references/xxx.md 는 위키링크로 바꿔 클릭하면 원본이 열리게 한다."""
+    ref = st["ref"]
+    ref = re.sub(r"`references/([a-z-]+)\.md`", r"[[\1]]", ref)
+    ref = ref.replace("이 문서", "[[SKILL]]").replace("`", "")
+    job = st["job"].split(". ")
+    lines = [f"**{st['stage']} · {job[0]}**"]
+    if len(job) > 1:
+        lines.append(". ".join(job[1:]))
+    lines.append(ref)
+    return "\n".join(lines)
+
+
+def build_flow(stages: list[dict]) -> str:
+    """단계 흐름 캔버스. 준비 행이 위, 루프 여덟이 고리로 돈다."""
+    W, H, GX, GY = 340, 150, 420, 230
+    nodes, edges, nid = [], [], {}
+
+    def add(st: dict, x: int, y: int, color: str | None = None) -> None:
+        i = f"n{len(nodes) + 1}"
+        nid[st["stage"]] = i
+        node = {"id": i, "type": "text", "text": _card_text(st),
+                "x": x, "y": y, "width": W, "height": H}
+        if color:
+            node["color"] = color
+        nodes.append(node)
+
+    prep = [s for s in stages if s["group"] != "루프"]
+    loop = [s for s in stages if s["group"] == "루프"]
+
+    for i, st in enumerate(prep):
+        add(st, i * GX, 0, color="4" if st["group"] == "조건부" else None)
+
+    top, bottom = loop[:4], loop[4:]
+    for i, st in enumerate(top):
+        add(st, i * GX, 400)
+    for i, st in enumerate(bottom):
+        add(st, (len(top) - 1 - i) * GX, 400 + GY)
+
+    def link(a: str, b: str, fs: str, ts: str, label: str | None = None) -> None:
+        e = {"id": f"e{len(edges) + 1}", "fromNode": nid[a], "fromSide": fs,
+             "toNode": nid[b], "toSide": ts}
+        if label:
+            e["label"] = label
+        edges.append(e)
+
+    for a, b in zip(prep, prep[1:]):
+        link(a["stage"], b["stage"], "right", "left")
+    if prep and loop:
+        link(prep[-1]["stage"], loop[0]["stage"], "bottom", "top")
+    for a, b in zip(loop, loop[1:]):
+        sa, sb = a["stage"], b["stage"]
+        if sb in [s["stage"] for s in top][1:] and sa in [s["stage"] for s in top]:
+            link(sa, sb, "right", "left")
+        elif sa in [s["stage"] for s in top]:
+            link(sa, sb, "bottom", "top")
+        else:
+            link(sa, sb, "left", "right")
+    if len(loop) > 1:
+        link(loop[-1]["stage"], loop[0]["stage"], "top", "bottom", "보류 · 미해결이 다음 루프의 측정 항목")
+        cond = [s for s in stages if s["group"] == "조건부"]
+        if cond:
+            link(loop[-1]["stage"], cond[0]["stage"], "left", "bottom", "기법이 늘면")
+
+    if loop:
+        xs = [n["x"] for n in nodes[len(prep):]]
+        ys = [n["y"] for n in nodes[len(prep):]]
+        nodes.append({"id": "grp-loop", "type": "group",
+                      "label": "루프 · 한 번에 최대 4회",
+                      "x": min(xs) - 40, "y": min(ys) - 60,
+                      "width": max(xs) - min(xs) + W + 80,
+                      "height": max(ys) - min(ys) + H + 100})
+
+    return json.dumps({"nodes": nodes, "edges": edges}, ensure_ascii=False, indent=2) + "\n"
+
+
+def canvas_meaning(text: str) -> tuple | None:
+    """캔버스의 의미만 뽑는다. 좌표 · 크기 · 포맷은 비교하지 않는다.
+    옵시디언이 파일을 다시 저장하거나 카드를 손으로 옮겨도 어긋남이 아니다."""
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    ident = {n["id"]: n.get("file") or n.get("text") or n.get("label")
+             for n in data.get("nodes", [])}
+    files = frozenset(f for f in ident.values() if f)
+    edges = frozenset(
+        (ident.get(e.get("fromNode")), ident.get(e.get("toNode")),
+         e.get("label"), e.get("fromEnd"))
+        for e in data.get("edges", [])
+    )
+    return files, edges
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true", help="어긋났으면 종료코드 1")
@@ -236,16 +350,24 @@ def main() -> int:
 
     index, body = split_edges(collect_edges(root, docs))
     merged = merge_mutual(body)
+    keep = existing_positions(here / CANVAS)
     made = {
         NOTE: build_note(docs, index, body, merged),
-        CANVAS: build_canvas(docs, merged, depths([d for d in docs if d != INDEX], body)),
+        CANVAS: build_canvas(docs, merged, depths([d for d in docs if d != INDEX], body), keep),
     }
+    stages = parse_pipeline(root)
+    if stages:
+        made[FLOW] = build_flow(stages)
 
     if args.check:
-        stale = [
-            n for n, text in made.items()
-            if not (here / n).exists() or (here / n).read_text(encoding="utf-8") != text
-        ]
+        stale = []
+        for name, text in made.items():
+            cur = (here / name).read_text(encoding="utf-8") if (here / name).exists() else ""
+            if name.endswith(".canvas"):
+                if canvas_meaning(cur) != canvas_meaning(text):
+                    stale.append(name)
+            elif cur != text:
+                stale.append(name)
         if stale:
             print("[어긋남] " + " · ".join(stale) + " → python _map/build.py")
             return 1

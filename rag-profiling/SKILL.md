@@ -11,7 +11,18 @@ description: >-
 
 RAG 품질은 기법이 아니라 데이터가 정한다. 같은 기법도 데이터 생김새에 따라 효과가 뒤집힌다.
 그래서 널리 좋다는 기법을 가져다 붙이지 않는다. 데이터를 먼저 재고, 그 값에 맞춰
-**청킹 단위 · 검색 방식 · 인덱싱 대상 · 적재 범위**를 정한다.
+**청킹 단위 · 검색 방식 · 임베딩 대상 · 운영 적재 범위**를 정한다.
+
+**산출 문서는 네 단을 이 순서로 간다.** 목차의 뼈대이고, 표준 목차(`references/narrative.md`)가 이것을 편다.
+
+```
+틀    도메인 사전 지식을 먼저 세운다.  실측이 담길 그릇이다
+내용  실측 집계를 그 틀에 짝지어 낸다.  정의는 이런데 실제는 이렇다
+루프  돌 때마다 측정 항목이 생기고 죽는다.  그 생사를 문서에 남긴다
+결말  로컬에서 정한 규칙을 실제 서비스의 적재 · 임베딩 설계로 옮겨 닫는다
+```
+
+**틀 없이 집계만 내면 로그이고, 결말 없이 규칙만 내면 로컬 실험 보고서다.**
 
 실제 사례에서 실측 전에 세워둔 설계 **5건이 그대로 뒤집혔다.**
 5단 계층 파서는 불필요했고(파일의 64.3%가 최소 단위만 씀), 과제는 긴 조각이 아니라 짧은 조각이었고,
@@ -22,6 +33,11 @@ RAG 품질은 기법이 아니라 데이터가 정한다. 같은 기법도 데�
 **측정 기록이 아니라 컨설팅 산출물이다.** 이 스킬에서 가장 위에 있는 규칙이다.
 남의 데이터를 분석해 주고 **"그래서 이렇게 하십시오"** 를 내놓는 자리다.
 잰 것을 순서대로 늘어놓으면 컨설팅이 아니라 로그다.
+
+**"이렇게 하십시오" 의 대상은 로컬 DB 가 아니라 운영 서비스다.** 재는 자리는 로컬 DuckDB 지만
+받는 쪽이 실행할 자리는 벡터스토어다. 문서는 청킹 규칙에서 끝나지 않고
+**무엇을 어떤 단위로 임베딩해 어디에 넣는가**까지 적고 닫는다. 로컬 측정으로 못 정하는 것
+(임베딩 모델 · 평가셋이 필요한 항목)은 보류로 남기되 판정 기준을 함께 적는다.
 
 **목차가 곧 발표 흐름이다.** 절 제목만 위에서 아래로 읽어도 이야기가 되어야 하고,
 절마다 앞에서 받고 뒤로 넘긴다. 표준 목차와 이음매 규칙은 `references/narrative.md`.
@@ -59,26 +75,30 @@ GitHub 여부, 마크다운 여부, 한국어 여부 전부 알아내야 할 것
 
 ## 파이프라인
 
-```
-단계                          참조                        팀
-S  폴더 탐색                  scripts/survey.py           1
-0  기법 카탈로그 + 사전 조사     references/techniques.md    기법군 8 · 사전조사 축 5
-L  적재 · 인덱스               scripts/load.py · index.py  1  (쓰기 락. 이 동안 아무도 못 읽는다)
-1  측정 항목 설계              references/catalog.md       대표 파일 3~5
-2  1차 측정                   scripts/q.py + queries/     질문 수만큼 (읽기 전용이라 충돌 없음)
-3  LLM 판정                   references/llm-judgment.md  층 수만큼
-4  가설 → 2차 교차검증          references/hypothesis-validation.md   H1~H4
-5  기법 판정                   채택 · 보류 · 기각 + 근거     판정마다 반증자 1
-6  확정 규칙 원본 재적용         queries/reapply_check.sql   1
-7  원장에 기록                 scripts/ledger.py           1  (오케스트레이터 단독)
-8  문서 검증                   references/verifying.md     절마다 생독자 1 + 이음매 1
-        │
-        └──── 보류·미해결이 다음 바퀴의 측정 항목이 된다 ────┘
+| 구분 | 단계 | 하는 일 | 참조 | 팀 |
+|---|---|---|---|---|
+| 준비 · 1회 | S | 폴더 탐색 | `scripts/survey.py` | 1 |
+| 조건부 | 0 | 기법 카탈로그 + 사전 조사. 기법이 늘거나 바뀌면 다시 들어온다 | `references/techniques.md` | 기법군 8 · 사전조사 축 5 |
+| 준비 · 1회 | L | 측정용 로컬 적재 · 인덱스 | `scripts/load.py` · `index.py` | 1 (쓰기 락. 이 동안 아무도 못 읽는다) |
+| 루프 | 1 | 측정 항목 설계. 나오는 일곱 자리 · 죽는 절차 | `references/catalog.md` | 대표 파일 3~5 |
+| 루프 | 2 | 1차 측정 | `scripts/q.py` + `queries/` | 질문 수만큼 (읽기 전용이라 충돌 없음) |
+| 루프 | 3 | LLM 판정 | `references/llm-judgment.md` | 층 수만큼 |
+| 루프 | 4 | 가설 → 2차 교차검증 | `references/hypothesis-validation.md` · `queries/crosslink.sql` | H1~H4 |
+| 루프 | 5 | 기법 판정. 채택 · 보류 · 기각 + 근거 | 이 문서 `판정은 세 값이다` | 판정마다 반증자 1 |
+| 루프 | 6 | 확정 규칙 원본 재적용 | `queries/reapply_check.sql` | 1 |
+| 루프 | 7 | 원장에 기록 | `scripts/ledger.py` | 1 (오케스트레이터 단독) |
+| 루프 | 8 | 문서 검증 | `references/verifying.md` | 절마다 생독자 1 + 이음매 1 |
 
-⇒ 산출: 이 데이터에 맞춘 RAG 설계(청킹 단위 · 검색 방식 · 인덱싱 대상 · 적재 범위)
-        정본은 원장(ledger.jsonl)이고 문서는 그것을 사람이 읽게 렌더한 것이다
-        형태와 목차는 narrative.md · 표기는 reporting.md · 화면은 artifact.md · 검증은 verifying.md
-```
+**루프는 8 에서 1 로 돌아간다.** 8 이 남긴 보류 · 미해결이 1 의 측정 항목이 되어 다음 루프가 돈다.
+한 번에 최대 네 루프다.
+
+산출: 이 데이터에 맞춘 RAG 설계를 **운영 서비스가 그대로 실행할 수 있는 형태로** 적는다.
+청킹 단위 · 검색 방식 · 임베딩 대상과 단위 · 운영 적재 범위 · 메타 필터 · 코퍼스 간 링크.
+정본은 원장(`ledger.jsonl`)이고 문서는 그것을 사람이 읽게 렌더한 것이다.
+
+**`적재` 는 두 곳에 나오고 뜻이 다르다.** L 단계는 재기 위한 **측정용 로컬 적재**(DuckDB)이고,
+산출의 적재는 서비스가 실행할 **운영 적재**다. 같은 낱말로 쓰면 독자가 로컬 적재를 보고
+결말이 이미 끝난 줄로 읽는다. 문서에서는 갈라 적는다.
 
 **한 방향 파이프라인이 아니다.** 무엇을 측정할지 정하려면 기법 목록이 먼저 필요하고,
 측정 결과가 다시 기법 판정을 뒤집는다.
@@ -86,15 +106,15 @@ L  적재 · 인덱스               scripts/load.py · index.py  1  (쓰기 락
 **6단계를 건너뛰면 규칙이 종이 위에만 남는다.** 실제로 규칙을 전수 재적용하고 나서야
 "마커 분할만으로는 길이 상한을 못 지킨다"가 드러나 슬라이딩 분할이 추가됐다.
 
-### 바퀴는 시켜서 돌지 않는다
+### 루프는 시켜서 돌지 않는다
 
-7단계에서 원장에 `next_measure` 를 적었으면 **거기서 멈추지 말고 그 항목으로 다음 바퀴를 시작한다.**
-사람이 "그거 해줘" 할 때까지 기다리면 미해결이 쌓이기만 하고, 그게 1바퀴가 6단계를 통째로
+7단계에서 원장에 `next_measure` 를 적었으면 **거기서 멈추지 말고 그 항목으로 다음 루프를 시작한다.**
+사람이 "그거 해줘" 할 때까지 기다리면 미해결이 쌓이기만 하고, 그게 1루프가 6단계를 통째로
 건너뛴 채 닫힌 이유다. **다음 항목을 사람에게 묻지 않는다.** 물으면 그 순간 루프가 아니라 지시 대기다.
-**한 번에 최대 네 바퀴다.**
+**한 번에 최대 네 루프다.**
 
-멈춤 조건 다섯 · 다음 항목을 만드는 절차 · 바퀴 번호와 종료 판정은
-`references/orchestration.md` 의 `바퀴`.
+멈춤 조건 다섯 · 다음 항목을 만드는 절차 · 루프 번호와 종료 판정은
+`references/orchestration.md` 의 `루프`.
 
 ---
 
@@ -103,10 +123,10 @@ L  적재 · 인덱스               scripts/load.py · index.py  1  (쓰기 락
 `$S` 를 이 스킬의 `scripts/` 로 두고 프로젝트 루트에서 돌린다.
 
 **자리를 먼저 정한다. 회차는 폴더가 아니라 파일명으로 가른다.**
-`v1/` `v2/` 처럼 바퀴마다 폴더를 파면 같은 이름의 산출물이 여러 곳에 생겨
-**어느 게 어느 바퀴 건지 폴더 위치로만 알게 된다.**
+`v1/` `v2/` 처럼 루프마다 폴더를 파면 같은 이름의 산출물이 여러 곳에 생겨
+**어느 게 어느 루프 건지 폴더 위치로만 알게 된다.**
 그리고 **회차와 무관한 것에는 회차 표시를 안 붙인다.** 코퍼스 DB 와 원장이 그렇다.
-실제 사례에서 DB 를 1바퀴 폴더에 두었다가 2·3·4바퀴가 전부 그것을 쓰게 되어 이름과 실제가 어긋났다.
+실제 사례에서 DB 를 1루프 폴더에 두었다가 2·3·4루프가 전부 그것을 쓰게 되어 이름과 실제가 어긋났다.
 
 ```
 db/corpus.duckdb   코퍼스 DB.   회차 무관.  gitignore
@@ -140,21 +160,21 @@ python $S/q.py db/corpus.duckdb $S/queries/crosslink.sql
 # 6 · 확정 규칙을 전수에 다시 돌린 결과를 검증한다
 python $S/q.py db/corpus.duckdb $S/queries/reapply_check.sql
 
-# 8 · 오류 1·5·6·8 유형 자동 검출. 나온 것은 후보다. 판정 절차는 references/verifying.md
-python $S/extract.py report.html -o out/report.txt --claims out/report.claims.json
-python $S/validate.py out/report.claims.json --sources out/ --peer out/other.claims.json
-
-# 7 · 원장. 바퀴마다 파일이 새로 생기지 않고 레코드가 쌓인다. 첫 줄이 목차다
+# 7 · 원장. 루프마다 파일이 새로 생기지 않고 레코드가 쌓인다. 첫 줄이 목차다
 #     팀은 레코드 JSON 만 내고 넣는 것은 오케스트레이터 단독이다 (동시에 넣으면 레코드가 사라진다)
 python $S/ledger.py init  ledger.jsonl
 python $S/ledger.py add   ledger.jsonl --file out/R2.Q7.rec.json
 python $S/ledger.py check ledger.jsonl                    # 분모 누락 · 현행 충돌 · 끊긴 사슬
-python $S/ledger.py show  ledger.jsonl --q Q7 --all       # 그 항목의 바퀴 전체
+python $S/ledger.py show  ledger.jsonl --q Q7 --all       # 그 항목의 루프 전체
 
 # 8 · 문서. 판정표 · 미해결 · 종료 판정은 손으로 쓰지 않는다. 원장에서 뽑아 표시 사이에 끼운다
 #     문서에 <!-- GEN:verdicts --> … <!-- /GEN:verdicts --> 를 두면 그 사이를 갈아 끼운다
 python $S/render.py ledger.jsonl report.html
 python $S/render.py ledger.jsonl report.html --check    # 어긋났는지만 본다. 어긋나면 종료코드 1
+
+# 8 · 오류 1·5·6·8 유형 자동 검출. 나온 것은 후보다. 판정 절차는 references/verifying.md
+python $S/extract.py report.html -o out/report.txt --claims out/report.claims.json
+python $S/validate.py out/report.claims.json --sources out/ --peer out/other.claims.json
 
 # load.py 를 고쳤으면 두 적재 경로가 같은 값을 내는지 확인한다
 python $S/selftest.py <작은-폴더> --glob "**/*.md"
@@ -191,9 +211,12 @@ frontmatter 를 키/값으로 편 `meta(doc_id, key, val)` 뷰.
 청킹 후를 재면 자기 규칙의 사후 평가가 되어 순환 논리에 빠진다.
 청킹 전략은 프로파일링 결과로 **나중에** 정한다.
 
-**측정 항목을 고르는 기준은 하나다: 그 값이 설계를 바꾸는가.**
-바꾸지 못하는 측정은 비용만 늘리고 문서를 흐린다.
+**측정 항목은 두 관문을 다 통과해야 산다.**
+들어올 때는 **어떤 기법을 가르는가**(`techniques.md` 에서 역산한다. 못 가르면 안 만든다),
+나갈 때는 **그 값이 설계를 바꾸는가**(재보고 판정한다. 안 바꾸면 그 루프에서 닫는다).
+들어올 때만 보면 항목이 늘기만 하고, 나갈 때만 보면 무엇을 잴지 처음부터 정할 수 없다.
 모든 측정은 `측정 → 결과 → 결정` 세 줄로 쓴다. 결정이 안 나오면 넣지 않는다.
+항목이 나오는 일곱 자리와 죽는 절차는 `references/catalog.md`.
 
 **표기가 갈리는 것을 먼저 하나로 맞춘다.**
 같은 것이 두 가지로 적혀 있는데 한쪽만 세면 **틀렸다고 에러가 나지 않고 조용히 다른 값이 나온다.**
@@ -219,18 +242,13 @@ CRLF 를 그대로 두면 문자 수가 **법령 +3.2%**(131,276,684 → 127,194
 
 ## 참조 문서
 
+**단계에 걸린 문서와 쿼리는 위 파이프라인 표가 정본이다.** 같은 매핑을 여기 다시 적지 않는다.
+아래는 단계와 무관하게 상시로 읽는 문서다.
+
 | 파일 | 언제 읽는가 |
 |---|---|
 | `references/orchestration.md` | **일을 나누기 전에.** 팀 구성 · 배분 규약 · 라운드 · 동시성 함정 |
-| `references/techniques.md` | 0단계. 후보 기법과 각 기법이 성립하는 조건 |
-| `references/catalog.md` | 1단계. 측정 항목 8종 · 항목이 나오는 네 자리 · 전수 스캔 줄이기 |
-| `references/llm-judgment.md` | 3단계. LLM 개입 5지점 · 표본 뽑는 법 · 흔적 형식 |
-| `references/hypothesis-validation.md` | 4단계. 가설화 · 교차검증 · 기각 전 실패 표본 규칙 |
 | `references/narrative.md` | **문서를 시작할 때.** 컨설팅 산출물의 형태 · 표준 목차 · 이음매 |
 | `references/reporting.md` | 문서에 **수치와 표를 적을 때.** 오류 8유형 · 표기 규칙 |
 | `references/artifact.md` | 문서를 **화면에 띄울 때.** 렌더 제약 · 게시 |
 | `references/verifying.md` | 쓴 것을 **검증하고 고칠** 때. 검사기 · 후보 판정 · 읽히는지 · 이음매 |
-| `scripts/queries/basics.sql` · `outliers.sql` | 2단계. 분모·길이 분포 · 예상 밖 값 8종 탐지 |
-| `scripts/queries/markers.sql` | 2단계. Q1 구조 마커 일관성 · Q4 맥락 존재 여부 |
-| `scripts/queries/crosslink.sql` | 4단계. Q7 코퍼스 간 연결. 참조가 상대에 실재하는지 |
-| `scripts/queries/reapply_check.sql` | 6단계. 확정 규칙 재적용 결과 검증 |

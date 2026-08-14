@@ -1,0 +1,201 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "text",
+      "text": "**S · 폴더 탐색**\nscripts/survey.py",
+      "x": 0,
+      "y": 0,
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "n2",
+      "type": "text",
+      "text": "**0 · 기법 카탈로그 + 사전 조사**\n기법이 늘거나 바뀌면 다시 들어온다\n[[techniques]]",
+      "x": 420,
+      "y": 0,
+      "width": 340,
+      "height": 150,
+      "color": "4"
+    },
+    {
+      "id": "n3",
+      "type": "text",
+      "text": "**L · 측정용 로컬 적재 · 인덱스**\nscripts/load.py · index.py",
+      "x": 840,
+      "y": 0,
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "n4",
+      "type": "text",
+      "text": "**1 · 측정 항목 설계**\n나오는 일곱 자리 · 죽는 절차\n[[catalog]]",
+      "x": 0,
+      "y": 400,
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "n5",
+      "type": "text",
+      "text": "**2 · 1차 측정**\nscripts/q.py + queries/",
+      "x": 420,
+      "y": 400,
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "n6",
+      "type": "text",
+      "text": "**3 · LLM 판정**\n[[llm-judgment]]",
+      "x": 840,
+      "y": 400,
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "n7",
+      "type": "text",
+      "text": "**4 · 가설 → 2차 교차검증**\n[[hypothesis-validation]] · queries/crosslink.sql",
+      "x": 1260,
+      "y": 400,
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "n8",
+      "type": "text",
+      "text": "**5 · 기법 판정**\n채택 · 보류 · 기각 + 근거\n[[SKILL]] 판정은 세 값이다",
+      "x": 1260,
+      "y": 630,
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "n9",
+      "type": "text",
+      "text": "**6 · 확정 규칙 원본 재적용**\nqueries/reapply_check.sql",
+      "x": 840,
+      "y": 630,
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "n10",
+      "type": "text",
+      "text": "**7 · 원장에 기록**\nscripts/ledger.py",
+      "x": 420,
+      "y": 630,
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "n11",
+      "type": "text",
+      "text": "**8 · 문서 검증**\n[[verifying]]",
+      "x": 0,
+      "y": 630,
+      "width": 340,
+      "height": 150
+    },
+    {
+      "id": "grp-loop",
+      "type": "group",
+      "label": "루프 · 한 번에 최대 4회",
+      "x": -40,
+      "y": 340,
+      "width": 1680,
+      "height": 480
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "fromNode": "n1",
+      "fromSide": "right",
+      "toNode": "n2",
+      "toSide": "left"
+    },
+    {
+      "id": "e2",
+      "fromNode": "n2",
+      "fromSide": "right",
+      "toNode": "n3",
+      "toSide": "left"
+    },
+    {
+      "id": "e3",
+      "fromNode": "n3",
+      "fromSide": "bottom",
+      "toNode": "n4",
+      "toSide": "top"
+    },
+    {
+      "id": "e4",
+      "fromNode": "n4",
+      "fromSide": "right",
+      "toNode": "n5",
+      "toSide": "left"
+    },
+    {
+      "id": "e5",
+      "fromNode": "n5",
+      "fromSide": "right",
+      "toNode": "n6",
+      "toSide": "left"
+    },
+    {
+      "id": "e6",
+      "fromNode": "n6",
+      "fromSide": "right",
+      "toNode": "n7",
+      "toSide": "left"
+    },
+    {
+      "id": "e7",
+      "fromNode": "n7",
+      "fromSide": "bottom",
+      "toNode": "n8",
+      "toSide": "top"
+    },
+    {
+      "id": "e8",
+      "fromNode": "n8",
+      "fromSide": "left",
+      "toNode": "n9",
+      "toSide": "right"
+    },
+    {
+      "id": "e9",
+      "fromNode": "n9",
+      "fromSide": "left",
+      "toNode": "n10",
+      "toSide": "right"
+    },
+    {
+      "id": "e10",
+      "fromNode": "n10",
+      "fromSide": "left",
+      "toNode": "n11",
+      "toSide": "right"
+    },
+    {
+      "id": "e11",
+      "fromNode": "n11",
+      "fromSide": "top",
+      "toNode": "n4",
+      "toSide": "bottom",
+      "label": "보류 · 미해결이 다음 루프의 측정 항목"
+    },
+    {
+      "id": "e12",
+      "fromNode": "n11",
+      "fromSide": "left",
+      "toNode": "n2",
+      "toSide": "bottom",
+      "label": "기법이 늘면"
+    }
+  ]
+}
