@@ -1,7 +1,7 @@
 """원장에서 문서의 세 절을 생성한다. 손으로 유지하던 것을 정본에서 뽑는다.
 
 문제: 값 하나가 바뀌면 문서의 여러 곳을 손으로 세어 고쳐야 한다. 하나라도 빠뜨리면
-      오류 8유형(문서 간 불일치)이고, 실제로 한 바퀴에 아홉 곳을 고친 적이 있다.
+      오류 8유형(문서 간 불일치)이고, 실제로 한 루프에 아홉 곳을 고친 적이 있다.
 해결: 원장이 이미 들고 있는 것(판정 · 근거 · 다음에 잴 것)은 문서에서 지우고 여기서 뽑는다.
       문서에는 서사(실물 → 판단 → 안 그러면)만 손으로 남는다.
 
@@ -22,6 +22,11 @@ from __future__ import annotations
 import argparse
 import html
 import json
+
+
+def norm_display(s):
+    """표시층 용어 정규화. 원장 원본은 손대지 않는다."""
+    return s.replace("바퀴", "루프") if isinstance(s, str) else s
 import sys
 from pathlib import Path
 
@@ -29,7 +34,7 @@ TAGS = {"채택": "ok", "보류": "hold", "기각": "no", "측정": "ev"}
 
 
 def esc(s) -> str:
-    return html.escape(str(s or ""), quote=False)
+    return html.escape(norm_display(str(s or "")), quote=False)
 
 
 def load(path: Path):
@@ -105,17 +110,17 @@ def open_items(recs: list, cur: list) -> str:
            f"바깥 입력이 필요 없는 것이 <b>{len(now)}건</b>, 기다리는 것이 <b>{len(wait)}건</b>이다.</p>"]
     if now:
         out += ["<h3>지금 돌 수 있는 것</h3>",
-                "<p>판정 기준이 서 있고 바깥에서 가져올 것이 없다. 다음 바퀴는 여기서 고른다. "
+                "<p>판정 기준이 서 있고 바깥에서 가져올 것이 없다. 다음 루프는 여기서 고른다. "
                 "판정 기준은 <b>다음에 잴 것</b> 안에 함께 적혀 있다.</p>",
                 table(now)]
     if wait:
         out += ["<h3>바깥 입력을 기다리는 것</h3>", table(wait, third=True)]
     if closed:
         out += ["<h3>닫힌 것</h3>",
-                "<p>앞 바퀴가 남겼고 뒤 바퀴가 값을 냈다. <b>지우지 않는다.</b> "
+                "<p>앞 루프가 남겼고 뒤 루프가 값을 냈다. <b>지우지 않는다.</b> "
                 "왜 더 안 도는지가 여기 남아야 다음 사람이 같은 축을 다시 열지 않는다.</p>",
                 '<div class="tblwrap"><table>',
-                "<tr><th>항목</th><th>무엇으로 닫혔나</th><th>바퀴</th></tr>"]
+                "<tr><th>항목</th><th>무엇으로 닫혔나</th><th>루프</th></tr>"]
         for r in closed:
             out.append(f'<tr><td>{esc(r["q"])} <span class="nm">{esc(r["id"])}</span></td>'
                        f'<td>{esc(r.get("title", ""))}</td><td class="n">{esc(r.get("round", ""))}</td></tr>')
@@ -138,7 +143,7 @@ def loopend(cur: list) -> str:
     if wait:
         # 목록은 미해결 절이 이미 들고 있다. 같은 넷을 두 번 보여주지 않는다.
         out.append(f"<p><b>바깥 입력을 기다리는 {len(wait)}건의 목록은 앞 절 미해결에 있다.</b> "
-                   "여기서는 그 넷이 <b>왜 이 바퀴에서 안 돌았는지</b>만 가른다. "
+                   "여기서는 그 넷이 <b>왜 이 루프에서 안 돌았는지</b>만 가른다. "
                    "미해결이 “무엇이 남았나”라면 이 절은 “더 돌 값어치가 있나”다.</p>")
         kinds = {}
         for r in wait:
