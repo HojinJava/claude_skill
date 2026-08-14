@@ -1,5 +1,5 @@
 ---
-name: corpus-profiling
+name: rag-profiling
 description: Use when starting RAG on a new corpus and the chunking/loading design is not yet decided - runs as a team (one orchestrator dispatching measurer, reader, refuter, checker agents in parallel rounds), loads the corpus into a local DuckDB and measures the raw documents first, then picks chunking, enrichment, loading scope, metadata filters and cross-corpus links from evidence instead of defaults. The deliverable is a CONSULTING presentation, not a measurement log - its table of contents is the argument itself and every number traces back to a query. Scope is the corpus axis only: retrieval method, query transformation and post-processing need an evaluation set and stay unresolved here. Triggers on "RAG 프로파일링", "코퍼스 프로파일링", "이 데이터로 청킹 어떻게", "임베딩 대상 정해야 함", "코퍼스 분석부터", "어떤 RAG 기법 써야 하나", profiling a document folder before indexing.
 ---
 
