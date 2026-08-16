@@ -58,18 +58,18 @@
     {
       "id": "n7",
       "type": "file",
-      "file": "references/narrative.md",
+      "file": "references/verifying.md",
       "x": 920,
-      "y": 460,
+      "y": 690,
       "width": 300,
       "height": 180
     },
     {
       "id": "n8",
       "type": "file",
-      "file": "references/verifying.md",
+      "file": "references/narrative.md",
       "x": 920,
-      "y": 690,
+      "y": 460,
       "width": 300,
       "height": 180
     },
@@ -97,7 +97,7 @@
       "id": "e1",
       "fromNode": "n5",
       "fromSide": "bottom",
-      "toNode": "n7",
+      "toNode": "n8",
       "toSide": "top",
       "fromEnd": "arrow",
       "label": "1·1"
@@ -152,14 +152,14 @@
     },
     {
       "id": "e8",
-      "fromNode": "n7",
+      "fromNode": "n8",
       "fromSide": "right",
       "toNode": "n9",
       "toSide": "left"
     },
     {
       "id": "e9",
-      "fromNode": "n7",
+      "fromNode": "n8",
       "fromSide": "right",
       "toNode": "n10",
       "toSide": "left",
@@ -168,11 +168,12 @@
     },
     {
       "id": "e10",
-      "fromNode": "n7",
+      "fromNode": "n8",
       "fromSide": "bottom",
-      "toNode": "n8",
+      "toNode": "n7",
       "toSide": "top",
-      "label": "2"
+      "fromEnd": "arrow",
+      "label": "2·1"
     },
     {
       "id": "e11",
@@ -185,7 +186,7 @@
       "id": "e12",
       "fromNode": "n10",
       "fromSide": "left",
-      "toNode": "n8",
+      "toNode": "n7",
       "toSide": "right",
       "fromEnd": "arrow",
       "label": "3·5"
@@ -199,7 +200,7 @@
     },
     {
       "id": "e14",
-      "fromNode": "n8",
+      "fromNode": "n7",
       "fromSide": "right",
       "toNode": "n9",
       "toSide": "left",
